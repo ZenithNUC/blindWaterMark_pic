@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import argparse
+import random
 
 ALPHA = 5
 
@@ -15,6 +16,9 @@ def create_parser():
     parser.add_argument('--a',dest='alphaValue',default=ALPHA)          # ALPHA值
     return parser
 
+'''
+获取构造参数
+'''
 def option_value():
     parser = create_parser()
     options = parser.parse_args()
@@ -22,3 +26,28 @@ def option_value():
     wImage = options.wmImage
     rImage = options.resImage
     return sImage,wImage,rImage
+
+'''
+在图片中加水印
+'''
+def encode(sImage,wImage,rImage,alpha):
+    sImg = cv2.imread(sImage)
+    sImg_f = np.fft.fft2(sImg)                  # 对原图计算二维的傅里叶变换
+    sHeight,sWidth,sChannel = np.shape(sImg)
+    wImg = cv2.imread(wImage)
+    wImg_f = np.fft.fft2(wImg)                  # 对水印计算二维的傅里叶变换
+    wHeight,wWigth,wChannel = np.shape(wImg)
+    x,y = range(sHeight / 2),range(sWidth)
+    random.seed(sHeight + sWidth)
+    random.shuffle(x)
+    random.shuffle(y)
+    temp = np.zeros(sImg.shape)
+    for i in range(sHeight / 2):
+        for j in range(sWidth):
+            if x[i] < wHeight and y[j] <wWigth:
+                temp[i][j] = wImg[x[i]][y[j]]
+                temp[sHeight - 1 - i][sWidth - 1 - j] = temp[i][j]
+    rImg_f = sImg_f + alpha * temp
+    rImg = np.fft.ifft2(rImg_f)
+    rImg = np.real(rImg)
+    cv2.imwrite(rImage,rImg,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
