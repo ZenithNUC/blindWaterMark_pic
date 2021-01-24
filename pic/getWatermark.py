@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import random
 import argparse
+import os
 
 ALPHA = 5
 
@@ -49,3 +50,11 @@ def decode(sImage,mImage,rImage,alpha):
         for j in range(sWidth):
             res[x[i]][y[j]] = watermark[i][j]
     cv2.imwrite(rImage,res,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
+
+def main():
+    sImage,mImage,rImage,alpha,parser = option_value()
+    if not os.path.isfile(sImage):
+        parser.error("original image %s does not exist." % sImage)
+    if not os.path.isfile(mImage):
+        parser.error("image %s does not exist." % mImage)
+    decode(sImage,mImage,rImage,alpha)
