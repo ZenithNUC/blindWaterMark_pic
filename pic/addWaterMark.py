@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import argparse
 import random
+import os
 
 ALPHA = 5
 
@@ -25,7 +26,8 @@ def option_value():
     sImage = options.sourceImage
     wImage = options.wmImage
     rImage = options.resImage
-    return sImage,wImage,rImage
+    alpha = float(options.alphaValue)
+    return sImage,wImage,rImage,alpha,parser
 
 '''
 在图片中加水印
@@ -37,12 +39,12 @@ def encode(sImage,wImage,rImage,alpha):
     wImg = cv2.imread(wImage)
     wImg_f = np.fft.fft2(wImg)                  # 对水印计算二维的傅里叶变换
     wHeight,wWigth,wChannel = np.shape(wImg)
-    x,y = range(sHeight / 2),range(sWidth)
+    x , y = list(range(sHeight // 2)) , list(range(sWidth))
     random.seed(sHeight + sWidth)
     random.shuffle(x)
     random.shuffle(y)
     temp = np.zeros(sImg.shape)
-    for i in range(sHeight / 2):
+    for i in range(sHeight // 2):
         for j in range(sWidth):
             if x[i] < wHeight and y[j] <wWigth:
                 temp[i][j] = wImg[x[i]][y[j]]
@@ -51,3 +53,15 @@ def encode(sImage,wImage,rImage,alpha):
     rImg = np.fft.ifft2(rImg_f)
     rImg = np.real(rImg)
     cv2.imwrite(rImage,rImg,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
+
+'''
+主函数，执行加注水印操作
+'''
+def main():
+    sImgPath,wImgPath,rImgPath,alpha,parser = option_value()
+    if not os.path.isfile(sImgPath):
+        parser.error("image %s does not exist." % sImgPath)
+    if not os.path.isfile(wImgPath):
+        parser.error("image %s does not exist." % wImgPath)
+    encode(sImgPath,wImgPath,rImgPath,alpha)
+
