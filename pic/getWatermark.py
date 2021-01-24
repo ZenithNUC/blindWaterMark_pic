@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import cv2
 import random
 import argparse
@@ -28,3 +28,24 @@ def option_value():
     alpha = float(options.alphaValue)
     return sImage,mImage,rImage,alpha,parser
 
+'''
+解出水印
+'''
+def decode(sImage,mImage,rImage,alpha):
+    sImg = cv2.imread(sImage)
+    sImg_f = np.fft.fft2(sImg)
+    mImg = cv2.imread(mImage)
+    mImg_f = np.fft.fft2(mImg)
+    sHeight,sWidth,sChannel = np.shape(sImg)
+    watermark = (sImg_f - mImg_f) / alpha
+    watermark = np.real(watermark)                  # 返回watermark的实部
+    res = np.zeros(watermark.shape)
+    random.seed(sHeight + sWidth)
+    x = list(range(sHeight // 2))
+    y = list(range(sWidth))
+    random.shuffle(x)
+    random.shuffle(y)
+    for i in range(sHeight // 2):
+        for j in range(sWidth):
+            res[x[i]][y[j]] = watermark[i][j]
+    cv2.imwrite(rImage,res,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
