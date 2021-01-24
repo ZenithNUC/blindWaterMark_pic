@@ -1,1 +1,3 @@
-# blindWaterMark_pic
+# 盲水印加注与提取（基于Python）
+
+目前通过二维傅里叶变换实现了盲水印加注操作
