@@ -11,7 +11,7 @@ class WaterMark:
         self.d1,self.d2 = 36 , 20                                       # d1/d2 越大鲁棒性越强,但输出图片的失真越大
 
         # 初始数据
-        self.img,self.img_YUY = None,None
+        self.img,self.img_YUV = None,None
         self.ca,self.hvd, = [np.array([])] * 3, [np.array([])] * 3      # 每个通道 dct 的结果
         self.ca_block = [np.array([])] * 3                              # 每个 channel 存一个四维 array，代表四维分块后的结果
         self.ca_part = [np.array([])] * 3                               # 四维分块后，有时因不整除而少一部分，self.ca_part 是少这一部分的 self.ca
@@ -24,3 +24,19 @@ class WaterMark:
         # self.part_shape 是取整后的ca二维大小,用于嵌入时忽略右边和下面对不齐的细条部分。
         self.part_shape = self.ca_block_shape[:2] * self.block_shape
         self.block_index = [(i, j) for i in range(self.ca_block_shape[0]) for j in range(self.ca_block_shape[1])]
+
+    '''
+    读入图片->YUV化->加白边使像素变偶数->四维分块
+    '''
+    def read_img(self,filename):
+        self.img = cv2.imread(filename).astype(np.float32)
+        self.img_shape = self.img.shape[:2]
+        # 如果不是偶数，那么补上白边
+        self.img_YUV = cv2.copyMakeBorder(cv2.cvtColor(self.img, cv2.COLOR_BGR2YUV),0, self.img.shape[0] % 2, 0, self.img.shape[1] % 2,cv2.BORDER_CONSTANT, value=(0, 0, 0))
+        self.ca_shape = [(i + 1) // 2 for i in self.img_shape]
+        self.ca_block_shape = (self.ca_shape[0] // self.block_shape[0], self.ca_shape[1] // self.block_shape[1],self.block_shape[0], self.block_shape[1])
+        strides = 4 * np.array([self.ca_shape[1] * self.block_shape[0], self.block_shape[1], self.ca_shape[1], 1])
+        for channel in range(3):
+            self.ca[channel], self.hvd[channel] = pywt.dwt2(self.img_YUV[:, :, channel], 'haar')
+            # 转为4维度
+            self.ca_block[channel] = np.lib.stride_tricks.as_strided(self.ca[channel].astype(np.float32),self.ca_block_shape, strides)
