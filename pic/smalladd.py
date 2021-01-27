@@ -17,3 +17,10 @@ class WaterMark:
         self.ca_part = [np.array([])] * 3                               # 四维分块后，有时因不整除而少一部分，self.ca_part 是少这一部分的 self.ca
         self.wm_size, self.block_num = 0, 0                             # 水印的长度，原图片可插入信息的个数
         self.pool = ThreadPool(processes=cores)                         # 水印插入分块多进程
+
+    def init_block_index(self):
+        self.block_num = self.ca_block_shape[0] * self.ca_block_shape[1]
+        assert self.wm_size < self.block_num,IndexError('最多可嵌入{}kb信息，多于水印的{}kb信息，溢出'.format(self.block_num / 1000, self.wm_size / 1000))
+        # self.part_shape 是取整后的ca二维大小,用于嵌入时忽略右边和下面对不齐的细条部分。
+        self.part_shape = self.ca_block_shape[:2] * self.block_shape
+        self.block_index = [(i, j) for i in range(self.ca_block_shape[0]) for j in range(self.ca_block_shape[1])]
