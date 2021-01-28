@@ -63,4 +63,19 @@ class WaterMark:
         self.wm_size = self.wm_bit.size
         np.random.RandomState(self.password_wm).shuffle(self.wm_bit)
 
-    
+    '''
+    分块添加水印
+    '''
+    def block_add_wm(self,arg):
+        block,shuffler,i = arg
+        # dct->flatten->加密->逆flatten->svd->打水印->逆svd->逆dct
+        wm_1 = self.wm_bit[i % self.wm_size]
+        block_dct = cv2.dct(block)              # 对块进行离散余弦变换
+        block_dct_shuffled = block_dct.flatten()[shuffler].reshape(self.block_shape)        # 打乱顺序
+        U,s,V = np.linalg.svd(block_dct_shuffled)
+        s[0] = (s[0] // self.d1 + 1 / 4  + 1 / 2 *wm_1) * self.d1
+        if self.d2:
+            s[1] = (s[1] // self.d2 + 1 / 4  + 1 / 2 *wm_1) * self.d2
+        block_dct_flatten = np.dot(U,np.dot(np.diag(s),V)).flatten()
+        block_dct_flatten[shuffler] = block_dct_flatten.copy()
+        return cv2.idct(block_dct_flatten.reshape(self.block_shape))
