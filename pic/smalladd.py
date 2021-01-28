@@ -40,3 +40,11 @@ class WaterMark:
             self.ca[channel], self.hvd[channel] = pywt.dwt2(self.img_YUV[:, :, channel], 'haar')
             # 转为4维度
             self.ca_block[channel] = np.lib.stride_tricks.as_strided(self.ca[channel].astype(np.float32),self.ca_block_shape, strides)
+
+    '''
+    读取水印图片
+    
+    '''
+    def read_img_wm(self,filename):
+        self.wm = cv2.imread(filename)[:,:,0]                       # 读入图片格式的水印，并转为一维 bit 格式
+        self.wm_bit = self.wm.flatten() > 128                       # 加密信息只用bit类，抛弃灰度级别
