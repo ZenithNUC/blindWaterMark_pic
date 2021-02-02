@@ -4,7 +4,7 @@ import argparse
 import random
 import os
 
-ALPHA = 5
+ALPHA = 3
 
 '''
 构造命令行
@@ -36,6 +36,7 @@ def encode(sImage,wImage,rImage,alpha):
     sImg = cv2.imread(sImage)
     sImg_f = np.fft.fft2(sImg)                  # 对原图计算二维的傅里叶变换
     sHeight,sWidth,sChannel = np.shape(sImg)
+    print(sChannel)
     wImg = cv2.imread(wImage)
     wImg_f = np.fft.fft2(wImg)                  # 对水印计算二维的傅里叶变换
     wHeight,wWigth,wChannel = np.shape(wImg)

@@ -4,7 +4,7 @@ import random
 import argparse
 import os
 
-ALPHA = 5
+ALPHA = 3
 
 '''
 构造参数语句
